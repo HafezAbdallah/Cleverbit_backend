@@ -11,10 +11,15 @@ namespace Cleverbit.CodingTask.Data
         }
 
         public DbSet<User> Users { get; set; }
-
+        public DbSet<Match> Matches { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>().ToTable(nameof(User));
+            modelBuilder.Entity<User>().
+                HasMany(m => m.Matches).
+                WithMany(u => u.Players).
+                UsingEntity(j=>j.ToTable("MatchesPlayers"));
+
+            modelBuilder.Entity<Match>().HasOne(u=>u.Winner);
         }
     }
 }

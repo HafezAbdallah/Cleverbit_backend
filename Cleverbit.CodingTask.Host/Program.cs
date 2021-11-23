@@ -16,7 +16,6 @@ namespace Cleverbit.CodingTask.Host
             var host = CreateHostBuilder(args).Build();
 
             CreateDbIfNotExists(host);
-
             host.Run();
         }
 

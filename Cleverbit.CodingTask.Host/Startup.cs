@@ -1,4 +1,7 @@
+using Cleverbit.CodingTask.Business.Implmentation;
+using Cleverbit.CodingTask.Business.Interfaces;
 using Cleverbit.CodingTask.Data;
+using Cleverbit.CodingTask.DataAccess.DataAccess.UnitOfWork;
 using Cleverbit.CodingTask.Host.Auth;
 using Cleverbit.CodingTask.Utilities;
 using Microsoft.AspNetCore.Authentication;
@@ -26,21 +29,35 @@ namespace Cleverbit.CodingTask.Host
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+                       
+            }));
             services
                 .AddDbContext<CodingTaskContext>(
                 options => options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
             services.AddSingleton<IHashService>(new HashService(configuration.GetSection("HashSalt").Get<string>()));
 
-            services.AddControllers();
+            services.AddScoped<IMatchBusiness, MatchesBusiness>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+            services.AddControllers().AddNewtonsoftJson(options =>
+      options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+  );
             services.AddAuthentication("BasicAuthentication")
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
+
+         
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseCors("MyPolicy");
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
